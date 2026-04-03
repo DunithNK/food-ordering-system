@@ -1,0 +1,80 @@
+{
+  "rest-001": [
+    {
+      "id": "item-001",
+      "name": "Margherita Pizza",
+      "description": "Classic tomato and cheese",
+      "price": 1200,
+      "category": "Pizza",
+      "available": true
+    },
+    {
+      "id": "item-002",
+      "name": "Pepperoni Pizza",
+      "description": "Loaded with pepperoni",
+      "price": 1500,
+      "category": "Pizza",
+      "available": true
+    },
+    {
+      "id": "item-003",
+      "name": "Garlic Bread",
+      "description": "Crispy garlic bread",
+      "price": 400,
+      "category": "Sides",
+      "available": true
+    }
+  ],
+  "rest-002": [
+    {
+      "id": "item-004",
+      "name": "Classic Burger",
+      "description": "Beef patty with lettuce and tomato",
+      "price": 900,
+      "category": "Burgers",
+      "available": true
+    },
+    {
+      "id": "item-005",
+      "name": "Cheese Burger",
+      "description": "Double cheese beef burger",
+      "price": 1100,
+      "category": "Burgers",
+      "available": true
+    },
+    {
+      "id": "item-006",
+      "name": "French Fries",
+      "description": "Crispy golden fries",
+      "price": 350,
+      "category": "Sides",
+      "available": true
+    }
+  ],
+  "rest-003": [
+    {
+      "id": "item-007",
+      "name": "Rice & Curry",
+      "description": "Traditional Sri Lankan meal",
+      "price": 700,
+      "category": "Main Course",
+      "available": true
+    },
+    {
+      "id": "item-008",
+      "name": "Kottu Roti",
+      "description": "Classic egg kottu",
+      "price": 850,
+      "category": "Main Course",
+      "available": true
+    },
+    {
+      "id": "item-009",
+      "name": "Pol Sambol",
+      "description": "Coconut sambol side dish",
+      "price": 150,
+      "category": "Sides",
+      "available": true
+    }
+  ]
+}

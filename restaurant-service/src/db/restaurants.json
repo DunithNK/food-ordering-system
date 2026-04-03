@@ -1,0 +1,32 @@
+[
+  {
+    "id": "rest-001",
+    "name": "Pizza Palace",
+    "address": "12 Galle Road, Colombo 03",
+    "phone": "0112345678",
+    "cuisine": "Italian",
+    "rating": 4.5,
+    "isOpen": true,
+    "createdAt": "2026-04-03T12:55:25.887Z"
+  },
+  {
+    "id": "rest-002",
+    "name": "Burger Barn",
+    "address": "45 Kandy Road, Colombo 10",
+    "phone": "0119876543",
+    "cuisine": "American",
+    "rating": 4.2,
+    "isOpen": true,
+    "createdAt": "2026-04-03T12:55:25.887Z"
+  },
+  {
+    "id": "rest-003",
+    "name": "Spice Garden",
+    "address": "78 Union Place, Colombo 02",
+    "phone": "0115555555",
+    "cuisine": "Sri Lankan",
+    "rating": 4.8,
+    "isOpen": true,
+    "createdAt": "2026-04-03T12:55:25.888Z"
+  }
+]
