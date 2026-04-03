@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FoodRush — Online Food Ordering</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS ─────────────────────────────────── */
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #13131a;
+      --surface2:  #1c1c28;
+      --border:    #2a2a3d;
+      --accent:    #ff6b35;
+      --accent2:   #ffbe0b;
+      --green:     #06d6a0;
+      --red:       #ef476f;
+      --text:      #f0eff6;
+      --muted:     #7b7a96;
+      --font-head: 'Syne', sans-serif;
+      --font-body: 'DM Sans', sans-serif;
+      --radius:    14px;
+      --radius-sm: 8px;
+      --glow:      0 0 40px rgba(255,107,53,0.15);
+    }
+
+    /* ─── LIGHT MODE ────────────────────────────────────── */
+    :root.light-mode {
+      --bg:        #f5f7fb;
+      --surface:   #ffffff;
+      --surface2:  #eff1f8;
+      --border:    #d9dce6;
+      --accent:    #ff6b35;
+      --accent2:   #d97706;
+      --green:     #059669;
+      --red:       #dc2626;
+      --text:      #111827;
+      --muted:     #6b7280;
+      --glow:      0 0 40px rgba(255,107,53,0.08);
+    }
+
+    /* ─── RESET ─────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    button { cursor: pointer; font-family: var(--font-body); border: none; outline: none; }
+    input, select, textarea { font-family: var(--font-body); outline: none; }
+    a { text-decoration: none; color: inherit; }
+
+    /* ─── TOAST ──────────────────────────────────────────── */
+    #toast-container {
+      position: fixed; top: 24px; right: 24px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .toast {
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px 18px;
+      font-size: 13.5px; min-width: 260px; max-width: 340px;
+      display: flex; align-items: flex-start; gap: 10px;
+      animation: slideIn .3s ease; box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    }
+    .toast.success { border-left: 3px solid var(--green); }
+    .toast.error   { border-left: 3px solid var(--red); }
+    .toast.info    { border-left: 3px solid var(--accent); }
+    .toast-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+    .toast-msg  { line-height: 1.4; }
+    @keyframes slideIn { from { transform: translateX(120%); opacity:0; } to { transform: translateX(0); opacity:1; } }
+    @keyframes fadeOut { to { opacity:0; transform: translateX(120%); } }
+
+    /* ─── TOPBAR ─────────────────────────────────────────── */
+    #topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(10,10,15,.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 32px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+      transition: background .3s ease;
+    }
+    :root.light-mode #topbar {
+      background: rgba(248,249,251,.95);
+    }
+    .logo {
+      font-family: var(--font-head); font-size: 22px; font-weight: 800;
+      letter-spacing: -0.5px; color: var(--text);
+    }
+    .logo span { color: var(--accent); }
+    .nav-tabs { display: flex; gap: 4px; }
+    .nav-tab {
+      padding: 7px 16px; border-radius: 8px;
+      font-size: 13.5px; font-weight: 500;
+      color: var(--muted); background: transparent;
+      transition: all .2s;
+    }
+    .nav-tab:hover { color: var(--text); background: var(--surface2); }
+    .nav-tab.active { color: var(--accent); background: rgba(255,107,53,.12); }
+    .topbar-right { display: flex; align-items: center; gap: 12px; }
+    .theme-toggle {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); width: 38px; height: 38px;
+      border-radius: 8px; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; cursor: pointer;
+    }
+    .theme-toggle:hover { border-color: var(--accent); }
+    #user-badge {
+      display: none; align-items: center; gap: 8px;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 5px 14px 5px 8px;
+      font-size: 13px;
+    }
+    .user-avatar {
+      width: 26px; height: 26px; border-radius: 50%;
+      background: var(--accent); color: white;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .btn-logout {
+      background: transparent; color: var(--muted);
+      font-size: 12px; padding: 4px 8px; border-radius: 6px;
+      transition: all .2s;
+    }
+    .btn-logout:hover { color: var(--red); }
+    #cart-btn {
+      position: relative; background: var(--surface2);
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 8px 14px; font-size: 20px;
+      transition: all .2s; display: none;
+    }
+    #cart-btn:hover { border-color: var(--accent); box-shadow: var(--glow); }
+    #cart-count {
+      position: absolute; top: -5px; right: -5px;
+      background: var(--accent); color: white;
+      font-size: 10px; font-weight: 700;
+      width: 18px; height: 18px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      display: none;
+    }
+
+    /* ─── PAGES ──────────────────────────────────────────── */
+    .page { display: none; min-height: calc(100vh - 64px); padding: 40px 32px; }
+    .page.active { display: block; animation: fadeUp .35s ease; }
+    @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+    /* ─── AUTH PAGE ──────────────────────────────────────── */
+    #page-auth {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100vh - 64px);
+      padding: 20px 32px !important;
+    }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 40px;
+      width: 100%; max-width: 420px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.5);
+    }
+    .auth-title {
+      font-family: var(--font-head); font-size: 26px; font-weight: 800;
+      margin-bottom: 6px;
+    }
+    .auth-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; }
+    .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 28px; }
+    .auth-tab {
+      flex: 1; padding: 10px; font-size: 14px; font-weight: 500;
+      background: transparent; color: var(--muted);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: all .2s;
+    }
+    .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─── FORM CONTROLS ──────────────────────────────────── */
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: .5px; }
+    .field input, .field select {
+      width: 100%; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 11px 14px;
+      color: var(--text); font-size: 14px; transition: border-color .2s;
+    }
+    .field input:focus, .field select:focus { border-color: var(--accent); }
+    .field input::placeholder { color: var(--muted); }
+    select option { background: var(--surface2); }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 11px 22px; border-radius: var(--radius-sm);
+      font-size: 14px; font-weight: 500; transition: all .2s; cursor: pointer;
+    }
+    .btn-primary {
+      background: var(--accent); color: white;
+    }
+    .btn-primary:hover { background: #ff8555; box-shadow: 0 4px 20px rgba(255,107,53,.35); }
+    .btn-secondary {
+      background: var(--surface2); color: var(--text); border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost { background: transparent; color: var(--muted); }
+    .btn-ghost:hover { color: var(--text); }
+    .btn-danger { background: rgba(239,71,111,.15); color: var(--red); border: 1px solid rgba(239,71,111,.3); }
+    .btn-danger:hover { background: rgba(239,71,111,.25); }
+    .btn-success { background: rgba(6,214,160,.15); color: var(--green); border: 1px solid rgba(6,214,160,.3); }
+    .btn-success:hover { background: rgba(6,214,160,.25); }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 7px 14px; font-size: 13px; }
+
+    /* ─── PAGE HEADER ────────────────────────────────────── */
+    .page-header { margin-bottom: 32px; }
+    .page-header h1 { font-family: var(--font-head); font-size: 30px; font-weight: 800; }
+    .page-header p { color: var(--muted); margin-top: 6px; font-size: 15px; }
+
+    /* ─── GRID ───────────────────────────────────────────── */
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+
+    /* ─── CARD ───────────────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px;
+      transition: all .25s;
+    }
+    .card:hover { border-color: rgba(255,107,53,.4); transform: translateY(-2px); box-shadow: var(--glow); }
+    .card-title { font-family: var(--font-head); font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .card-sub { color: var(--muted); font-size: 13px; }
+    .card-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+    .tag {
+      font-size: 11px; font-weight: 600; padding: 3px 9px;
+      border-radius: 20px; text-transform: uppercase; letter-spacing: .4px;
+    }
+    .tag-orange { background: rgba(255,107,53,.15); color: var(--accent); }
+    .tag-yellow { background: rgba(255,190,11,.15); color: var(--accent2); }
+    .tag-green  { background: rgba(6,214,160,.15);  color: var(--green);   }
+    .tag-red    { background: rgba(239,71,111,.15);  color: var(--red);     }
+    .tag-muted  { background: rgba(123,122,150,.15); color: var(--muted);   }
+
+    /* ─── RESTAURANT PAGE ────────────────────────────────── */
+    .rest-card { cursor: pointer; }
+    .rest-banner {
+      height: 90px; border-radius: 8px; margin-bottom: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; position: relative; overflow: hidden;
+    }
+    .rest-rating { color: var(--accent2); font-size: 13px; font-weight: 600; }
+
+    /* ─── MENU MODAL ─────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
+      align-items: center; justify-content: center; padding: 24px;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: 100%; max-width: 560px;
+      max-height: 85vh; display: flex; flex-direction: column;
+      box-shadow: 0 32px 80px rgba(0,0,0,.6);
+      animation: fadeUp .3s ease;
+    }
+    .modal-header {
+      padding: 22px 24px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    .modal-header h2 { font-family: var(--font-head); font-size: 20px; font-weight: 700; }
+    .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); flex-shrink: 0; }
+    .btn-close {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); width: 32px; height: 32px;
+      border-radius: 8px; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .btn-close:hover { color: var(--text); }
+
+    .menu-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid var(--border);
+    }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item-info { flex: 1; }
+    .menu-item-name { font-weight: 500; font-size: 14.5px; }
+    .menu-item-desc { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+    .menu-item-price { color: var(--accent2); font-weight: 700; font-size: 15px; }
+    .menu-item-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; flex-shrink: 0; margin-left: 16px; }
+    .qty-control { display: flex; align-items: center; gap: 10px; }
+    .qty-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); font-size: 16px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .15s;
+    }
+    .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .qty-val { font-size: 14px; font-weight: 600; min-width: 18px; text-align: center; }
+
+    /* ─── CART SIDEBAR ───────────────────────────────────── */
+    #cart-sidebar {
+      position: fixed; top: 64px; right: -400px; bottom: 0;
+      width: 380px; background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 150; transition: right .3s ease;
+      display: flex; flex-direction: column;
+    }
+    #cart-sidebar.open { right: 0; }
+    .cart-header {
+      padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cart-header h3 { font-family: var(--font-head); font-size: 18px; font-weight: 700; }
+    .cart-body { flex: 1; overflow-y: auto; padding: 16px 22px; }
+    .cart-footer { padding: 16px 22px; border-top: 1px solid var(--border); }
+    .cart-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 11px 0; border-bottom: 1px solid var(--border);
+      font-size: 14px;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-name { font-weight: 500; flex: 1; }
+    .cart-item-qty { color: var(--muted); font-size: 13px; margin: 0 12px; }
+    .cart-item-price { color: var(--accent2); font-weight: 600; }
+    .cart-item-remove { color: var(--muted); font-size: 16px; margin-left: 10px; transition: color .2s; }
+    .cart-item-remove:hover { color: var(--red); }
+    .cart-total {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 14px 0; font-size: 15px;
+    }
+    .cart-total-label { font-weight: 600; }
+    .cart-total-val { font-family: var(--font-head); font-size: 20px; font-weight: 800; color: var(--accent); }
+    .empty-cart { text-align: center; padding: 40px 0; color: var(--muted); }
+    .empty-cart .icon { font-size: 48px; margin-bottom: 12px; }
+
+    /* ─── CHECKOUT FORM ──────────────────────────────────── */
+    .checkout-section { margin-bottom: 20px; }
+    .checkout-section h4 { font-family: var(--font-head); font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+    /* ─── ORDERS PAGE ────────────────────────────────────── */
+    .order-card { margin-bottom: 16px; }
+    .order-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .order-id { font-family: var(--font-head); font-size: 13px; font-weight: 700; color: var(--muted); }
+    .order-items { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; line-height: 1.6; }
+    .order-footer { display: flex; align-items: center; justify-content: space-between; }
+    .order-amount { font-family: var(--font-head); font-size: 18px; font-weight: 800; color: var(--accent2); }
+    .order-date { font-size: 12px; color: var(--muted); }
+
+    /* ─── STATUS BADGE ───────────────────────────────────── */
+    .status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: .5px; }
+    .status-PENDING          { background: rgba(255,190,11,.15); color: var(--accent2); }
+    .status-CONFIRMED        { background: rgba(255,107,53,.15); color: var(--accent); }
+    .status-PREPARING        { background: rgba(255,107,53,.2);  color: var(--accent); }
+    .status-OUT_FOR_DELIVERY { background: rgba(6,214,160,.15);  color: var(--green); }
+    .status-DELIVERED        { background: rgba(6,214,160,.2);   color: var(--green); }
+    .status-CANCELLED        { background: rgba(239,71,111,.15); color: var(--red); }
+    .status-SUCCESS          { background: rgba(6,214,160,.2);   color: var(--green); }
+    .status-FAILED           { background: rgba(239,71,111,.15); color: var(--red); }
+    .status-REFUNDED         { background: rgba(123,122,150,.15);color: var(--muted); }
+
+    /* ─── PAYMENTS PAGE ──────────────────────────────────── */
+    .pay-row { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+    .pay-row:last-child { border-bottom: none; }
+    .pay-ref { font-family: monospace; font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .pay-amount { font-family: var(--font-head); font-size: 16px; font-weight: 700; }
+
+    /* ─── LOADING ────────────────────────────────────────── */
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,.2); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-block { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 60px; color: var(--muted); }
+
+    /* ─── PROFILE PAGE ───────────────────────────────────── */
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .info-row { padding: 12px 0; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 14px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-label { color: var(--muted); }
+    .info-val { font-weight: 500; }
+
+    /* ─── DIVIDER ────────────────────────────────────────── */
+    .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+    /* ─── SECTION TITLE ──────────────────────────────────── */
+    .section-title { font-family: var(--font-head); font-size: 20px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* ─── RESPONSIVE ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .page { padding: 24px 16px; }
+      #topbar { padding: 0 16px; }
+      .nav-tab span { display: none; }
+      #cart-sidebar { width: 100%; right: -100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div id="toast-container"></div>
+
+<!-- TOPBAR -->
+<header id="topbar">
+  <div class="logo">Food<span>Rush</span></div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="navigate('home')" data-page="home">🏠 <span>Home</span></button>
+    <button class="nav-tab" onclick="navigate('restaurants')" data-page="restaurants">🍽️ <span>Restaurants</span></button>
+    <button class="nav-tab auth-required" onclick="navigate('orders')" data-page="orders" style="display:none">📦 <span>My Orders</span></button>
+    <button class="nav-tab auth-required" onclick="navigate('payments')" data-page="payments" style="display:none">💳 <span>Payments</span></button>
+    <button class="nav-tab auth-required" onclick="navigate('profile')" data-page="profile" style="display:none">👤 <span>Profile</span></button>
+  </nav>
+  <div class="topbar-right">
+    <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode">🌙</button>
+    <div id="user-badge">
+      <div class="user-avatar" id="user-avatar">?</div>
+      <span id="user-name-badge">Guest</span>
+      <button class="btn-logout" onclick="logout()">Sign out</button>
+    </div>
+    <button id="cart-btn" onclick="toggleCart()">🛒 <span id="cart-count">0</span></button>
+  </div>
+</header>
+
+<!-- CART SIDEBAR -->
+<div id="cart-sidebar">
+  <div class="cart-header">
+    <h3>Your Cart</h3>
+    <button class="btn-close" onclick="toggleCart()">✕</button>
+  </div>
+  <div class="cart-body" id="cart-body"></div>
+  <div class="cart-footer" id="cart-footer"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════ PAGES ═══ -->
+
+<!-- HOME -->
+<div id="page-home" class="page active">
+  <div style="max-width:700px; margin:0 auto; text-align:center; padding:60px 0 40px;">
+    <div style="font-size:64px; margin-bottom:20px;">🍔</div>
+    <h1 style="font-family:var(--font-head);font-size:48px;font-weight:800;line-height:1.1;margin-bottom:16px;">
+      Hungry? <span style="color:var(--accent)">We've got you.</span>
+    </h1>
+    <p style="color:var(--muted);font-size:17px;line-height:1.7;margin-bottom:36px;">
+      Order from the best local restaurants. Fast delivery, real-time tracking, and seamless payments - all in one place.
+    </p>
+    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <button class="btn btn-primary" style="font-size:15px;padding:13px 28px;" onclick="navigate('restaurants')">Browse Restaurants →</button>
+      <button class="btn btn-secondary" id="home-auth-btn" style="font-size:15px;padding:13px 28px;" onclick="navigate('auth')">Sign In / Register</button>
+    </div>
+  </div>
+  <div style="max-width:900px;margin:0 auto;">
+    <div class="grid-3">
+      <div class="card" style="text-align:center;padding:32px 20px;">
+        <div style="font-size:32px;margin-bottom:12px;">⚡</div>
+        <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:6px;">Fast Delivery</div>
+        <div style="color:var(--muted);font-size:13.5px;">Average 30-min delivery from your favourite spots</div>
+      </div>
+      <div class="card" style="text-align:center;padding:32px 20px;">
+        <div style="font-size:32px;margin-bottom:12px;">📍</div>
+        <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:6px;">Live Tracking</div>
+        <div style="color:var(--muted);font-size:13.5px;">Track your order from kitchen to your doorstep</div>
+      </div>
+      <div class="card" style="text-align:center;padding:32px 20px;">
+        <div style="font-size:32px;margin-bottom:12px;">🔒</div>
+        <div style="font-family:var(--font-head);font-size:16px;font-weight:700;margin-bottom:6px;">Secure Payments</div>
+        <div style="color:var(--muted);font-size:13.5px;">Card, cash, and online banking options available</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH -->
+<div id="page-auth" class="page" style="display:none;">
+  <div class="auth-card">
+    <div class="auth-title">Welcome back 👋</div>
+    <div class="auth-sub">Sign in to start ordering</div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="field"><label>Email</label><input type="email" id="login-email" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="login-password" placeholder="••••••••"/></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="doLogin()">Sign In</button>
+    </div>
+
+    <!-- REGISTER FORM -->
+    <div id="form-register" style="display:none;">
+      <div class="field"><label>Full Name</label><input type="text" id="reg-name" placeholder="Alice Fernando"/></div>
+      <div class="field"><label>Email</label><input type="email" id="reg-email" placeholder="you@example.com"/></div>
+      <div class="field"><label>Password</label><input type="password" id="reg-password" placeholder="Min 6 characters"/></div>
+      <div class="field"><label>Phone</label><input type="text" id="reg-phone" placeholder="0771234567"/></div>
+      <div class="field"><label>Address</label><input type="text" id="reg-address" placeholder="123 Main St, Colombo"/></div>
+      <button class="btn btn-primary btn-full" style="margin-top:8px;" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESTAURANTS -->
+<div id="page-restaurants" class="page" style="display:none;">
+  <div class="page-header">
+    <h1>Restaurants</h1>
+    <p>Choose your favourite spot and browse their menu</p>
+  </div>
+  <div id="restaurants-grid" class="grid-3">
+    <div class="loading-block"><div class="spinner"></div> Loading restaurants…</div>
+  </div>
+</div>
+
+<!-- ORDERS -->
+<div id="page-orders" class="page" style="display:none;">
+  <div class="page-header">
+    <h1>My Orders</h1>
+    <p>Track and manage all your orders</p>
+  </div>
+  <div id="orders-list">
+    <div class="loading-block"><div class="spinner"></div> Loading orders…</div>
+  </div>
+</div>
+
+<!-- PAYMENTS -->
+<div id="page-payments" class="page" style="display:none;">
+  <div class="page-header">
+    <h1>Payment History</h1>
+    <p>All your transactions in one place</p>
+  </div>
+  <div id="payments-list">
+    <div class="loading-block"><div class="spinner"></div> Loading payments…</div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div id="page-profile" class="page" style="display:none;">
+  <div class="page-header">
+    <h1>My Profile</h1>
+    <p>View and update your account details</p>
+  </div>
+  <div style="max-width:600px;">
+    <div class="card" style="margin-bottom:20px;">
+      <div class="section-title">Account Info</div>
+      <div id="profile-info"></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Update Profile</div>
+      <div class="field"><label>Full Name</label><input type="text" id="edit-name" /></div>
+      <div class="field"><label>Phone</label><input type="text" id="edit-phone" /></div>
+      <div class="field"><label>Address</label><input type="text" id="edit-address" /></div>
+      <button class="btn btn-primary" onclick="updateProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MENU MODAL ═══════════ -->
+<div class="modal-overlay" id="menu-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <h2 id="modal-rest-name">Restaurant</h2>
+        <div id="modal-rest-meta" style="color:var(--muted);font-size:13px;margin-top:4px;"></div>
+      </div>
+      <button class="btn-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-menu-body"></div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-full" onclick="addToCartFromModal(); closeModal()">Add to Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ CHECKOUT MODAL ═══════════ -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Checkout</h2>
+      <button class="btn-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="checkout-section">
+        <h4>Delivery Address</h4>
+        <div class="field"><input type="text" id="checkout-address" placeholder="Enter delivery address"/></div>
+      </div>
+      <div class="checkout-section">
+        <h4>Payment Method</h4>
+        <div class="field">
+          <select id="checkout-method">
+            <option value="CASH">💵 Cash on Delivery</option>
+            <option value="CARD">💳 Card Payment</option>
+            <option value="ONLINE_BANKING">🏦 Online Banking</option>
+          </select>
+        </div>
+      </div>
+      <div class="checkout-section">
+        <h4>Order Summary</h4>
+        <div id="checkout-summary"></div>
+      </div>
+    </div>
+    <div class="modal-footer" style="display:flex;gap:10px;">
+      <button class="btn btn-secondary" onclick="closeCheckout()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1;" onclick="placeOrder()">Place Order & Pay</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+const API = 'http://localhost:8080'; // All calls via API Gateway
+
+// ── Centralized fetch helper ──────────────────────────────────
+async function api(path, options = {}) {
+  const url = API + path;
+  const headers = { 'Accept': 'application/json', ...(options.headers || {}) };
+  if (options.body) headers['Content-Type'] = 'application/json';
+  const config = { ...options, headers };
+  const res = await fetch(url, config);
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : {};
+  return data;
+}
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let state = {
+  user:           null,
+  token:          null,
+  cart:           [],           // [{itemId, name, price, quantity, restaurantId, restaurantName}]
+  cartRestId:     null,
+  cartRestName:   null,
+  currentPage:    'home',
+  menuItems:      {},           // { restId: [{...}] }
+  modalCart:      {},           // temp qty during modal
+  modalRestId:    null,
+};
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  const saved = localStorage.getItem('foodrush_user');
+  if (saved) {
+    const { user, token } = JSON.parse(saved);
+    state.user = user; state.token = token;
+    onLogin();
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════════════
+function toast(msg, type = 'info', duration = 3500) {
+  const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'fadeOut .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
+function navigate(page) {
+  if (['orders','payments','profile'].includes(page) && !state.user) {
+    toast('Please sign in first', 'error'); navigate('auth'); return;
+  }
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.display = 'none'; });
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const el = document.getElementById(`page-${page}`);
+  if (el) { el.style.display = 'block'; requestAnimationFrame(() => el.classList.add('active')); }
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  state.currentPage = page;
+
+  if (page === 'restaurants') loadRestaurants();
+  if (page === 'orders') loadOrders();
+  if (page === 'payments') loadPayments();
+  if (page === 'profile') loadProfile();
+}
+
+// ═══════════════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════════════
+function switchAuthTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login')||(i===1 && tab==='register')));
+  document.getElementById('form-login').style.display    = tab === 'login'    ? '' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? '' : 'none';
+}
+
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) { toast('Email and password required', 'error'); return; }
+  try {
+    const data = await api(`/users/login`, { method:'POST', body: JSON.stringify({email, password}) });
+    if (!data.success) throw new Error(data.message);
+    state.user = data.data.user; state.token = data.data.token;
+    localStorage.setItem('foodrush_user', JSON.stringify({ user: state.user, token: state.token }));
+    onLogin(); navigate('restaurants');
+    toast(`Welcome back, ${state.user.name.split(' ')[0]}! 🎉`, 'success');
+  } catch(e) { toast(e.message || 'Login failed', 'error'); }
+}
+
+async function doRegister() {
+  const name = document.getElementById('reg-name').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const phone = document.getElementById('reg-phone').value.trim();
+  const address = document.getElementById('reg-address').value.trim();
+  if (!name || !email || !password) { toast('Name, email and password required', 'error'); return; }
+  try {
+    const data = await api(`/users/register`, { method:'POST', body: JSON.stringify({name, email, password, phone, address}) });
+    if (!data.success) throw new Error(data.message);
+    toast('Account created! Please sign in.', 'success');
+    switchAuthTab('login');
+    document.getElementById('login-email').value = email;
+  } catch(e) { toast(e.message || 'Registration failed', 'error'); }
+}
+
+function onLogin() {
+  document.getElementById('user-badge').style.display = 'flex';
+  document.getElementById('user-name-badge').textContent = state.user.name.split(' ')[0];
+  document.getElementById('user-avatar').textContent = state.user.name[0].toUpperCase();
+  document.getElementById('cart-btn').style.display = 'flex';
+  document.getElementById('home-auth-btn').style.display = 'none';
+  document.querySelectorAll('.auth-required').forEach(el => el.style.display = '');
+}
+
+function logout() {
+  state.user = null; state.token = null; state.cart = []; state.cartRestId = null;
+  localStorage.removeItem('foodrush_user');
+  document.getElementById('user-badge').style.display = 'none';
+  document.getElementById('cart-btn').style.display = 'none';
+  document.getElementById('cart-count').style.display = 'none';
+  document.getElementById('home-auth-btn').style.display = '';
+  document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'none');
+  renderCart();
+  navigate('home');
+  toast('Signed out', 'info');
+}
+
+// ═══════════════════════════════════════════════════════
+//  RESTAURANTS
+// ═══════════════════════════════════════════════════════
+const REST_EMOJIS = { Italian:'🍕', American:'🍔', 'Sri Lankan':'🍛', Japanese:'🍱', Chinese:'🥡', default:'🍽️' };
+const REST_COLORS = ['#ff6b35','#ff9f1c','#e63946','#2a9d8f','#457b9d','#6a0572'];
+
+async function loadRestaurants() {
+  document.getElementById('restaurants-grid').innerHTML = '<div class="loading-block"><div class="spinner"></div> Loading restaurants…</div>';
+  try {
+    const data = await api(`/restaurants`);
+    if (!data.success) throw new Error(data.message);
+    renderRestaurants(data.data);
+  } catch(e) { document.getElementById('restaurants-grid').innerHTML = `<div class="loading-block" style="color:var(--red)">⚠️ ${e.message}</div>`; }
+}
+
+function renderRestaurants(list) {
+  if (!list.length) { document.getElementById('restaurants-grid').innerHTML = '<div class="loading-block">No restaurants found</div>'; return; }
+  document.getElementById('restaurants-grid').innerHTML = list.map((r, i) => {
+    const emoji = REST_EMOJIS[r.cuisine] || REST_EMOJIS.default;
+    const color = REST_COLORS[i % REST_COLORS.length];
+    const stars = '★'.repeat(Math.round(r.rating)) + '☆'.repeat(5 - Math.round(r.rating));
+    return `
+    <div class="card rest-card" onclick="openMenu('${r.id}','${r.name.replace(/'/g,"\\'")}','${r.cuisine}',${r.rating})">
+      <div class="rest-banner" style="background:linear-gradient(135deg,${color}22,${color}44)">${emoji}</div>
+      <div class="card-title">${r.name}</div>
+      <div class="card-sub">${r.address}</div>
+      <div class="card-meta">
+        <span class="tag tag-orange">${r.cuisine}</span>
+        <span class="rest-rating">${stars} ${r.rating}</span>
+        ${r.isOpen ? '<span class="tag tag-green">Open</span>' : '<span class="tag tag-red">Closed</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MENU MODAL
+// ═══════════════════════════════════════════════════════
+async function openMenu(restId, restName, cuisine, rating) {
+  if (!state.user) { toast('Please sign in to order', 'error'); navigate('auth'); return; }
+  state.modalRestId = restId;
+  state.modalCart = {};
+  document.getElementById('modal-rest-name').textContent = restName;
+  document.getElementById('modal-rest-meta').textContent = `${cuisine} • ⭐ ${rating}`;
+  document.getElementById('modal-menu-body').innerHTML = '<div class="loading-block"><div class="spinner"></div></div>';
+  document.getElementById('menu-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  try {
+    const data = await api(`/restaurants/${restId}/menu`);
+    if (!data.success) throw new Error(data.message);
+    state.menuItems[restId] = data.data;
+    renderMenuModal(data.data, restId, restName);
+  } catch(e) {
+    document.getElementById('modal-menu-body').innerHTML = `<div class="loading-block" style="color:var(--red)">⚠️ ${e.message}</div>`;
+  }
+}
+
+function renderMenuModal(items, restId, restName) {
+  if (!items.length) { document.getElementById('modal-menu-body').innerHTML = '<div class="loading-block">No menu items</div>'; return; }
+  const groups = {};
+  items.forEach(it => { if (!groups[it.category]) groups[it.category] = []; groups[it.category].push(it); });
+  document.getElementById('modal-menu-body').innerHTML = Object.entries(groups).map(([cat, catItems]) => `
+    <div style="margin-bottom:8px;font-family:var(--font-head);font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;">${cat}</div>
+    ${catItems.map(it => `
+    <div class="menu-item">
+      <div class="menu-item-info">
+        <div class="menu-item-name">${it.name}</div>
+        <div class="menu-item-desc">${it.description}</div>
+      </div>
+      <div class="menu-item-right">
+        <div class="menu-item-price">Rs. ${it.price}</div>
+        <div class="qty-control">
+          <button class="qty-btn" onclick="changeModalQty('${it.id}','${it.name}',${it.price},-1)">−</button>
+          <span class="qty-val" id="mqty-${it.id}">0</span>
+          <button class="qty-btn" onclick="changeModalQty('${it.id}','${it.name}',${it.price},1)">+</button>
+        </div>
+      </div>
+    </div>`).join('')}
+  `).join('<div class="divider"></div>');
+}
+
+function changeModalQty(itemId, name, price, delta) {
+  const cur = state.modalCart[itemId]?.qty || 0;
+  const nxt = Math.max(0, cur + delta);
+  if (nxt === 0) delete state.modalCart[itemId];
+  else state.modalCart[itemId] = { itemId, name, price, qty: nxt };
+  const el = document.getElementById(`mqty-${itemId}`);
+  if (el) el.textContent = nxt;
+}
+
+function addToCartFromModal() {
+  const entries = Object.values(state.modalCart);
+  if (!entries.length) { toast('Select at least one item', 'error'); return; }
+  const restId = state.modalRestId;
+  const restName = document.getElementById('modal-rest-name').textContent;
+
+  // If cart has items from a different restaurant, warn and clear
+  if (state.cartRestId && state.cartRestId !== restId && state.cart.length > 0) {
+    if (!confirm(`Your cart has items from ${state.cartRestName}. Clear it and start a new order?`)) return;
+    state.cart = []; state.cartRestId = null; state.cartRestName = null;
+  }
+
+  state.cartRestId = restId; state.cartRestName = restName;
+  entries.forEach(({ itemId, name, price, qty }) => {
+    const existing = state.cart.find(c => c.itemId === itemId);
+    if (existing) existing.quantity += qty;
+    else state.cart.push({ itemId, name, price, quantity: qty, restaurantId: restId, restaurantName: restName });
+  });
+  renderCart();
+  toast(`${entries.length} item(s) added to cart 🛒`, 'success');
+  state.modalCart = {};
+}
+
+function closeModal() {
+  document.getElementById('menu-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ═══════════════════════════════════════════════════════
+//  CART
+// ═══════════════════════════════════════════════════════
+function toggleCart() {
+  document.getElementById('cart-sidebar').classList.toggle('open');
+}
+
+function renderCart() {
+  const body = document.getElementById('cart-body');
+  const footer = document.getElementById('cart-footer');
+  const count = state.cart.reduce((s,i) => s + i.quantity, 0);
+  const total = state.cart.reduce((s,i) => s + i.price * i.quantity, 0);
+
+  const countEl = document.getElementById('cart-count');
+  if (count > 0) { countEl.textContent = count; countEl.style.display = 'flex'; }
+  else { countEl.style.display = 'none'; }
+
+  if (!state.cart.length) {
+    body.innerHTML = `<div class="empty-cart"><div class="icon">🛒</div><div>Your cart is empty</div><div style="font-size:13px;margin-top:6px;">Browse restaurants to add items</div></div>`;
+    footer.innerHTML = '';
+    return;
+  }
+
+  body.innerHTML = `
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">From <strong style="color:var(--accent)">${state.cartRestName}</strong></div>
+    ${state.cart.map(it => `
+    <div class="cart-item">
+      <div class="cart-item-name">${it.name}</div>
+      <div class="cart-item-qty">×${it.quantity}</div>
+      <div class="cart-item-price">Rs. ${it.price * it.quantity}</div>
+      <button class="cart-item-remove" onclick="removeFromCart('${it.itemId}')">✕</button>
+    </div>`).join('')}
+    <div class="cart-total">
+      <div class="cart-total-label">Total</div>
+      <div class="cart-total-val">Rs. ${total}</div>
+    </div>`;
+
+  footer.innerHTML = `<button class="btn btn-primary btn-full" onclick="openCheckout()">Checkout →</button>`;
+}
+
+function removeFromCart(itemId) {
+  state.cart = state.cart.filter(i => i.itemId !== itemId);
+  if (!state.cart.length) { state.cartRestId = null; state.cartRestName = null; }
+  renderCart();
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHECKOUT
+// ═══════════════════════════════════════════════════════
+function openCheckout() {
+  if (!state.cart.length) { toast('Cart is empty', 'error'); return; }
+  document.getElementById('checkout-address').value = state.user?.address || '';
+  const total = state.cart.reduce((s,i) => s + i.price * i.quantity, 0);
+  document.getElementById('checkout-summary').innerHTML = `
+    ${state.cart.map(i => `<div class="pay-row"><span>${i.name} ×${i.quantity}</span><span>Rs. ${i.price * i.quantity}</span></div>`).join('')}
+    <div style="display:flex;justify-content:space-between;font-family:var(--font-head);font-size:18px;font-weight:800;padding-top:12px;margin-top:4px;border-top:1px solid var(--border)">
+      <span>Total</span><span style="color:var(--accent)">Rs. ${total}</span>
+    </div>`;
+  document.getElementById('checkout-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCheckout() {
+  document.getElementById('checkout-modal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+async function placeOrder() {
+  const address = document.getElementById('checkout-address').value.trim();
+  const method  = document.getElementById('checkout-method').value;
+  if (!address) { toast('Please enter a delivery address', 'error'); return; }
+
+  const total = state.cart.reduce((s,i) => s + i.price * i.quantity, 0);
+  const orderPayload = {
+    userId:          state.user.id,
+    restaurantId:    state.cartRestId,
+    deliveryAddress: address,
+    items: state.cart.map(i => ({ itemId: i.itemId, name: i.name, price: i.price, quantity: i.quantity }))
+  };
+
+  try {
+    // 1. Create Order
+    const oData = await api(`/orders`, { method:'POST', body: JSON.stringify(orderPayload) });
+    if (!oData.success) throw new Error('Order failed: ' + oData.message);
+
+    const orderId = oData.data.id;
+
+    // 2. Process Payment
+    const pData = await api(`/payments`, { method:'POST', body: JSON.stringify({ orderId, userId: state.user.id, amount: total, method }) });
+
+    closeCheckout();
+    document.getElementById('cart-sidebar').classList.remove('open');
+    state.cart = []; state.cartRestId = null; state.cartRestName = null;
+    renderCart();
+
+    if (pData.data?.status === 'SUCCESS') {
+      toast(`Order placed & payment confirmed! 🎉 Ref: ${pData.data.transactionRef}`, 'success', 5000);
+    } else {
+      toast(`Order placed but payment failed. Try paying again.`, 'error', 5000);
+    }
+    navigate('orders');
+  } catch(e) { toast(e.message || 'Something went wrong', 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  ORDERS
+// ═══════════════════════════════════════════════════════
+async function loadOrders() {
+  document.getElementById('orders-list').innerHTML = '<div class="loading-block"><div class="spinner"></div> Loading orders…</div>';
+  try {
+    const data = await api(`/orders/user/${state.user.id}`);
+    if (!data.success) throw new Error(data.message);
+    renderOrders(data.data);
+  } catch(e) { document.getElementById('orders-list').innerHTML = `<div class="loading-block" style="color:var(--red)">⚠️ ${e.message}</div>`; }
+}
+
+function renderOrders(orders) {
+  if (!orders.length) {
+    document.getElementById('orders-list').innerHTML = `<div class="loading-block"><div>No orders yet. <a style="color:var(--accent);cursor:pointer;" onclick="navigate('restaurants')">Start ordering →</a></div></div>`;
+    return;
+  }
+  orders.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  document.getElementById('orders-list').innerHTML = orders.map(o => `
+    <div class="card order-card">
+      <div class="order-header">
+        <div>
+          <div class="order-id">#${o.id}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:2px;">${new Date(o.createdAt).toLocaleString()}</div>
+        </div>
+        <span class="status status-${o.status}">${o.status.replace('_',' ')}</span>
+      </div>
+      <div class="order-items">${o.items.map(i => `${i.name} ×${i.quantity}`).join(' • ')}</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">📍 ${o.deliveryAddress}</div>
+      <div class="order-footer">
+        <div class="order-amount">Rs. ${o.totalAmount}</div>
+        <div style="display:flex;gap:8px;">
+          ${o.status === 'PENDING' || o.status === 'CONFIRMED' ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.id}')">Cancel</button>` : ''}
+          ${o.status === 'CONFIRMED' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${o.id}','PREPARING')">Mark Preparing</button>` : ''}
+          ${o.status === 'PREPARING' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${o.id}','OUT_FOR_DELIVERY')">Out for Delivery</button>` : ''}
+          ${o.status === 'OUT_FOR_DELIVERY' ? `<button class="btn btn-success btn-sm" onclick="updateStatus('${o.id}','DELIVERED')">Mark Delivered</button>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+async function cancelOrder(orderId) {
+  try {
+    const data = await api(`/orders/${orderId}/cancel`, { method:'PUT' });
+    if (!data.success) throw new Error(data.message);
+    toast('Order cancelled', 'info'); loadOrders();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+async function updateStatus(orderId, status) {
+  try {
+    const data = await api(`/orders/${orderId}/status`, { method:'PUT', body: JSON.stringify({status}) });
+    if (!data.success) throw new Error(data.message);
+    toast(`Status updated to ${status.replace('_',' ')}`, 'success'); loadOrders();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PAYMENTS
+// ═══════════════════════════════════════════════════════
+async function loadPayments() {
+  document.getElementById('payments-list').innerHTML = '<div class="loading-block"><div class="spinner"></div> Loading…</div>';
+  try {
+    const data = await api(`/payments`);
+    if (!data.success) throw new Error(data.message);
+    const mine = data.data.filter(p => p.userId === state.user.id);
+    renderPayments(mine);
+  } catch(e) { document.getElementById('payments-list').innerHTML = `<div class="loading-block" style="color:var(--red)">⚠️ ${e.message}</div>`; }
+}
+
+function renderPayments(payments) {
+  if (!payments.length) { document.getElementById('payments-list').innerHTML = '<div class="loading-block">No payments yet</div>'; return; }
+  payments.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+  document.getElementById('payments-list').innerHTML = `
+    <div class="card">
+      ${payments.map(p => `
+      <div class="pay-row">
+        <div>
+          <div style="font-weight:500;font-size:14.5px;">${p.method.replace('_',' ')} Payment</div>
+          <div class="pay-ref">Order: ${p.orderId}</div>
+          ${p.transactionRef ? `<div class="pay-ref">Ref: ${p.transactionRef}</div>` : ''}
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${new Date(p.createdAt).toLocaleString()}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
+          <div class="pay-amount" style="color:var(--accent2)">Rs. ${p.amount}</div>
+          <span class="status status-${p.status}">${p.status}</span>
+          ${p.status === 'SUCCESS' ? `<button class="btn btn-danger btn-sm" onclick="refund('${p.id}')">Refund</button>` : ''}
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+async function refund(payId) {
+  if (!confirm('Confirm refund?')) return;
+  try {
+    const data = await api(`/payments/${payId}/refund`, { method:'PUT' });
+    if (!data.success) throw new Error(data.message);
+    toast('Refund processed', 'success'); loadPayments();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROFILE
+// ═══════════════════════════════════════════════════════
+async function loadProfile() {
+  try {
+    const data = await api(`/users/${state.user.id}`);
+    if (!data.success) throw new Error(data.message);
+    const u = data.data;
+    document.getElementById('profile-info').innerHTML = `
+      <div class="info-row"><span class="info-label">Full Name</span><span class="info-val">${u.name}</span></div>
+      <div class="info-row"><span class="info-label">Email</span><span class="info-val">${u.email}</span></div>
+      <div class="info-row"><span class="info-label">Phone</span><span class="info-val">${u.phone || '—'}</span></div>
+      <div class="info-row"><span class="info-label">Address</span><span class="info-val">${u.address || '—'}</span></div>
+      <div class="info-row"><span class="info-label">Member Since</span><span class="info-val">${new Date(u.createdAt).toLocaleDateString()}</span></div>`;
+    document.getElementById('edit-name').value    = u.name;
+    document.getElementById('edit-phone').value   = u.phone || '';
+    document.getElementById('edit-address').value = u.address || '';
+  } catch(e) { toast('Could not load profile', 'error'); }
+}
+
+async function updateProfile() {
+  const name    = document.getElementById('edit-name').value.trim();
+  const phone   = document.getElementById('edit-phone').value.trim();  // ← 'f' removed
+  const address = document.getElementById('edit-address').value.trim();
+  try {
+    const data = await api(`/users/${state.user.id}`, { method:'PUT', body: JSON.stringify({name, phone, address}) });
+    if (!data.success) throw new Error(data.message);
+    state.user = { ...state.user, name, phone, address };
+    localStorage.setItem('foodrush_user', JSON.stringify({ user: state.user, token: state.token }));
+    document.getElementById('user-name-badge').textContent = name.split(' ')[0];
+    document.getElementById('user-avatar').textContent = name[0].toUpperCase();
+    toast('Profile updated ✅', 'success');
+    loadProfile();
+  } catch(e) { toast(e.message, 'error'); }
+}
+
+// ═══════════════════════════════════════════════════════
+//  THEME TOGGLE
+// ═══════════════════════════════════════════════════════
+function initTheme() {
+  const saved = localStorage.getItem('foodrush_theme') || 'dark';
+  applyTheme(saved);
+}
+
+function applyTheme(theme) {
+  const html = document.documentElement;
+  const toggle = document.getElementById('theme-toggle');
+  if (theme === 'light') {
+    html.classList.add('light-mode');
+    toggle.textContent = '☀️';
+    toggle.title = 'Switch to Dark Mode';
+  } else {
+    html.classList.remove('light-mode');
+    toggle.textContent = '🌙';
+    toggle.title = 'Switch to Light Mode';
+  }
+  localStorage.setItem('foodrush_theme', theme);
+}
+
+function toggleTheme() {
+  const current = localStorage.getItem('foodrush_theme') || 'dark';
+  const next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+}
+
+</script>
+</body>
+</html>
