@@ -1,0 +1,13 @@
+[
+  {
+    "id": "pay-c761a0a8",
+    "orderId": "order-bdb6aaa2",
+    "userId": "6c3509dd-6005-4fd0-be96-7d054fca76ec",
+    "amount": 1900,
+    "method": "CASH",
+    "status": "SUCCESS",
+    "transactionRef": "TXN-FC4DB59D-7",
+    "createdAt": "2026-04-03T12:56:38.869Z",
+    "updatedAt": "2026-04-03T12:56:38.870Z"
+  }
+]
