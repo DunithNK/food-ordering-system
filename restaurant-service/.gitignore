@@ -1,6 +1,0 @@
-node_modules/
-.env
-*.log
-.DS_Store
-src/db/restaurants.json
-src/db/menus.json
