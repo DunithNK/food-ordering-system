@@ -1,0 +1,20 @@
+[
+  {
+    "id": "user-001",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "$2a$10$0ucMLrHtMtPVN/29eFygRupFkJ7.tHTusz6SB8ykhO6JREL/G18UG",
+    "phone": "0711234567",
+    "address": "123 Main St, Colombo",
+    "createdAt": "2026-04-03T12:55:28.262Z"
+  },
+  {
+    "id": "6c3509dd-6005-4fd0-be96-7d054fca76ec",
+    "name": "Dunith Kalyanasinghe",
+    "email": "dunith@gmail.com",
+    "password": "$2a$10$V/nNCEYQR84OuxoLJu4pee0MsHvQMXi9cXVHhUTcioyZmZbK9HOh2",
+    "phone": "0705720954",
+    "address": "43/c/2,Major Asanga Nanayakkara Place, Pieris Rd, Werhaera, Boralesgam",
+    "createdAt": "2026-04-03T12:55:53.353Z"
+  }
+]
