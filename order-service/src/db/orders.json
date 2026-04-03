@@ -1,0 +1,26 @@
+[
+  {
+    "id": "order-bdb6aaa2",
+    "userId": "6c3509dd-6005-4fd0-be96-7d054fca76ec",
+    "restaurantId": "rest-001",
+    "items": [
+      {
+        "itemId": "item-002",
+        "name": "Pepperoni Pizza",
+        "price": 1500,
+        "quantity": 1
+      },
+      {
+        "itemId": "item-003",
+        "name": "Garlic Bread",
+        "price": 400,
+        "quantity": 1
+      }
+    ],
+    "totalAmount": 1900,
+    "status": "DELIVERED",
+    "deliveryAddress": "43/c/2,Major Asanga Nanayakkara Place, Pieris Rd, Werhaera, Boralesgam",
+    "createdAt": "2026-04-03T12:56:38.547Z",
+    "updatedAt": "2026-04-03T12:56:56.323Z"
+  }
+]
